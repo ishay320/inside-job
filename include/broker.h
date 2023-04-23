@@ -1,9 +1,15 @@
+#include <assert.h>
+
+#include <chrono>
 #include <cstddef>
 #include <queue>
 #include <string>
+#include <thread>
 #include <tuple>
 
 #include "hashmap_tree.h"
+
+using namespace std::chrono_literals;
 
 typedef size_t handle;
 typedef bool (*Callback)(void* data, size_t len);
@@ -12,8 +18,8 @@ template <size_t buffer_size>
 class Broker
 {
    public:
-    Broker();
-    ~Broker();
+    Broker() {}
+    ~Broker() {}
 
     handle connect()
     {
@@ -23,39 +29,93 @@ class Broker
 
     bool publish(const std::string& topic, void* data, size_t len)
     {
-        int queue_pos = getQueueNumber();
-        if (queue_pos = -1)
+        int queue_pos = getQueueHead();
+        if (queue_pos == -1)
         {
+            std::cout << "WARNING: broker buffer is full\n";
             return false;
         }
 
-        _buffer[queue_pos] = std::tuple<std::string, void*, size_t>{topic, data, len};
+        _buffer[queue_pos] = std::make_tuple(topic, data, len);
+        return true;
     }
 
     void subscribe(const std::string& topic, const handle& hand, Callback callback)
     {
+        if (topic.empty())
+        {
+            std::cout << "ERROR: topic is empty, cannot subscribe\n";
+            return;
+        }
+
         std::vector<std::string> parsed_topic;
+        parsed_topic = parseTopic(topic);
 
         _tree.insert(parsed_topic.data(), parsed_topic.size(), std::pair<handle, Callback>{hand, callback});
     }
     void remove_sub(const std::string& topic, const handle& hand);
 
-    static void run()
+    static void start(Broker<buffer_size>* that) { that->run(); }
+
+    void run()
     {
-        assert(false && "function not implemented yet");
         while (_should_run)
         {
             // sleep if buffer empty
+            if (queueSize() == 0)
+            {
+                break;  // TODO: remove that after tests
+                // std::this_thread::sleep_for(10ms);
+                // continue;
+            }
 
             // pull from buffer
+            auto [str, data, len] = _buffer[_queue_tail];
+
+            // release queue space
+            _queue_tail = (_queue_tail + 1) % buffer_size;
+
             // parse
+            auto topic = parseTopic(str);
+
             // get clients from tree
+            std::vector<std::pair<handle, Callback>> clients = _tree.get(topic.data(), topic.size());
+
             // push
+            for (auto&& client : clients)
+            {
+                client.second(data, len);
+            }
+        }
+    }
+
+    void printBuffer()
+    {
+        for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % buffer_size)
+        {
+            const auto [f, s, l] = _buffer[i];
+            std::cout << "pos: " << i << " data: " << f << " num: " << l << '\n';
         }
     }
 
    private:
-    int getQueueNumber()
+    std::vector<std::string> parseTopic(const std::string& topic)
+    {
+        constexpr char delimiter = '/';
+        std::vector<std::string> parsed_topic;
+
+        size_t last = 0;
+        size_t next = 0;
+        while ((next = topic.find(delimiter, last)) != std::string::npos)
+        {
+            parsed_topic.push_back(topic.substr(last, next - last));
+            last = next + 1;
+        }
+        parsed_topic.push_back(topic.substr(last));
+        return parsed_topic;
+    }
+
+    int getQueueHead()
     {
         if (isQueueFull())
         {
@@ -66,7 +126,11 @@ class Broker
         return ret;
     }
 
-    bool isQueueFull() { return queueSize() == buffer_size; }
+    bool isQueueFull()
+    {
+        // with this approach im losing one space, another option is to use bool flag
+        return queueSize() == (buffer_size - 1);
+    }
 
     size_t queueSize()
     {
@@ -77,7 +141,7 @@ class Broker
         }
         else
         {
-            queue_size = _queue_tail - _queue_head;
+            queue_size = _queue_head - _queue_tail;
         }
         return queue_size;
     }
