@@ -13,7 +13,7 @@ bool foo(void *data, size_t len)
 
 int main(int argc, char const *argv[])
 {
-    Broker<5> broker;
+    Broker broker;
 
     handle c = broker.connect();
 

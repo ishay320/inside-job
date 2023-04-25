@@ -9,12 +9,11 @@
 
 #include "hashmap_tree.h"
 
-using namespace std::chrono_literals;
+#define BROKER_QUEUE_SIZE 4096
 
 typedef size_t handle;
 typedef bool (*Callback)(void* data, size_t len);
 
-template <size_t buffer_size>
 class Broker
 {
    public:
@@ -63,7 +62,7 @@ class Broker
 
     void printBuffer()
     {
-        for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % buffer_size)
+        for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % BROKER_QUEUE_SIZE)
         {
             const auto [f, s, l] = _buffer[i];
             std::cout << "pos: " << i << " data: " << f << " num: " << l << '\n';
@@ -71,7 +70,7 @@ class Broker
     }
 
    private:
-    static void entry(Broker<buffer_size>* that) { that->run(); }
+    static void entry(Broker* that) { that->run(); }
 
     void run()
     {
@@ -81,6 +80,7 @@ class Broker
             if (queueSize() == 0)
             {
                 // TODO: replace with semaphore
+                using namespace std::chrono_literals;
                 std::this_thread::sleep_for(10ms);
                 continue;
             }
@@ -89,7 +89,7 @@ class Broker
             const auto [str, data, len] = _buffer[_queue_tail];
 
             // release queue space
-            _queue_tail = (_queue_tail + 1) % buffer_size;
+            _queue_tail = (_queue_tail + 1) % BROKER_QUEUE_SIZE;
 
             // parse
             auto topic = parseTopic(str);
@@ -128,14 +128,14 @@ class Broker
             return -1;
         }
         size_t ret  = _queue_head;
-        _queue_head = (_queue_head + 1) % buffer_size;
+        _queue_head = (_queue_head + 1) % BROKER_QUEUE_SIZE;
         return ret;
     }
 
     bool isQueueFull()
     {
         // with this approach im losing one space, another option is to use bool flag
-        return queueSize() == (buffer_size - 1);
+        return queueSize() == (BROKER_QUEUE_SIZE - 1);
     }
 
     size_t queueSize()
@@ -143,7 +143,7 @@ class Broker
         size_t queue_size = 0;
         if (_queue_head < _queue_tail)
         {
-            queue_size = _queue_head + buffer_size - _queue_tail;
+            queue_size = _queue_head + BROKER_QUEUE_SIZE - _queue_tail;
         }
         else
         {
@@ -158,5 +158,5 @@ class Broker
 
     size_t _queue_tail = 0; /* where broker use */
     size_t _queue_head = 0; /* where new objects pushed */
-    std::tuple<std::string, void*, size_t> _buffer[buffer_size];
+    std::tuple<std::string, void*, size_t> _buffer[BROKER_QUEUE_SIZE];
 };
