@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -40,7 +42,7 @@ class HashmapTree
     {
         std::vector<V> out;
         get_rec(topic, len, out);
-        return std::move(out);
+        return out;
     }
 
    private:
@@ -65,7 +67,7 @@ class HashmapTree
         }
         return false;
     }
-    
+
     std::unordered_map<K, HashmapTree*> _tree;
     std::vector<V> _data;
 };

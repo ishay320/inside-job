@@ -4,23 +4,31 @@
 #include <thread>
 
 #include "broker.h"
+#define UNUSED(x) (void)x
 
 bool foo(void *data, size_t len)
 {
+    UNUSED(data);
+    UNUSED(len);
     std::cout << "fooooooya\n";
     return true;
 }
 
 int main(int argc, char const *argv[])
 {
-    Broker broker;
+    UNUSED(argc);
+    UNUSED(argv);
 
-    handle c = broker.connect();
+    insideJob::Broker broker;
+
+    insideJob::handle c = broker.connect();
 
     broker.subscribe("main/test", c, foo);
     broker.subscribe("main/test2", c,
                      [](void *data, size_t len) -> bool
                      {
+                         UNUSED(data);
+                         UNUSED(len);
                          std::cout << "im in!\n";
                          return true;
                      });

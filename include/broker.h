@@ -1,15 +1,16 @@
-#include <assert.h>
+#pragma once
 
-#include <chrono>
-#include <cstddef>
-#include <queue>
 #include <string>
-#include <thread>
 #include <tuple>
 
 #include "hashmap_tree.h"
 
+#ifndef BROKER_QUEUE_SIZE
 #define BROKER_QUEUE_SIZE 4096
+#endif
+
+namespace insideJob
+{
 
 typedef size_t handle;
 typedef bool (*Callback)(void* data, size_t len);
@@ -17,146 +18,41 @@ typedef bool (*Callback)(void* data, size_t len);
 class Broker
 {
    public:
-    Broker() {}
-    ~Broker() {}
+    Broker();
+    ~Broker();
 
-    handle connect()
-    {
-        static handle id = 0;
-        return id++;
-    }
+    handle connect();
 
-    bool publish(const std::string& topic, void* data, size_t len)
-    {
-        int queue_pos = getQueueHead();
-        if (queue_pos == -1)
-        {
-            std::cout << "WARNING: broker buffer is full\n";
-            return false;
-        }
+    bool publish(const std::string& topic, void* data, size_t len);
 
-        _buffer[queue_pos] = std::make_tuple(topic, data, len);
-        return true;
-    }
-
-    void subscribe(const std::string& topic, const handle& hand, Callback callback)
-    {
-        if (topic.empty())
-        {
-            std::cout << "ERROR: topic is empty, cannot subscribe\n";
-            return;
-        }
-
-        std::vector<std::string> parsed_topic;
-        parsed_topic = parseTopic(topic);
-
-        _tree.insert(parsed_topic.data(), parsed_topic.size(), std::pair<handle, Callback>{hand, callback});
-    }
+    void subscribe(const std::string& topic, const handle& hand, Callback callback);
     void remove_sub(const std::string& topic, const handle& hand);
 
-    void start()
-    {
-        std::thread thread(entry, this);
-        thread.detach();
-    }
+    void start();
 
-    void printBuffer()
-    {
-        for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % BROKER_QUEUE_SIZE)
-        {
-            const auto [f, s, l] = _buffer[i];
-            std::cout << "pos: " << i << " data: " << f << " num: " << l << '\n';
-        }
-    }
+    void printBuffer();
 
    private:
-    static void entry(Broker* that) { that->run(); }
+    static void entry(Broker* that);
 
-    void run()
-    {
-        while (_should_run)
-        {
-            // sleep if buffer empty
-            if (queueSize() == 0)
-            {
-                // TODO: replace with semaphore
-                using namespace std::chrono_literals;
-                std::this_thread::sleep_for(10ms);
-                continue;
-            }
+    void run();
 
-            // pull from buffer
-            const auto [str, data, len] = _buffer[_queue_tail];
+    std::vector<std::string> parseTopic(const std::string& topic);
 
-            // release queue space
-            _queue_tail = (_queue_tail + 1) % BROKER_QUEUE_SIZE;
+    int getQueueHead();
 
-            // parse
-            auto topic = parseTopic(str);
+    bool isQueueFull();
 
-            // get clients from tree
-            std::vector<std::pair<handle, Callback>> clients = _tree.get(topic.data(), topic.size());
-
-            // push
-            for (auto&& client : clients)
-            {
-                client.second(data, len);
-            }
-        }
-    }
-
-    std::vector<std::string> parseTopic(const std::string& topic)
-    {
-        constexpr char delimiter = '/';
-        std::vector<std::string> parsed_topic;
-
-        size_t last = 0;
-        size_t next = 0;
-        while ((next = topic.find(delimiter, last)) != std::string::npos)
-        {
-            parsed_topic.push_back(topic.substr(last, next - last));
-            last = next + 1;
-        }
-        parsed_topic.push_back(topic.substr(last));
-        return parsed_topic;
-    }
-
-    int getQueueHead()
-    {
-        if (isQueueFull())
-        {
-            return -1;
-        }
-        size_t ret  = _queue_head;
-        _queue_head = (_queue_head + 1) % BROKER_QUEUE_SIZE;
-        return ret;
-    }
-
-    bool isQueueFull()
-    {
-        // with this approach im losing one space, another option is to use bool flag
-        return queueSize() == (BROKER_QUEUE_SIZE - 1);
-    }
-
-    size_t queueSize()
-    {
-        size_t queue_size = 0;
-        if (_queue_head < _queue_tail)
-        {
-            queue_size = _queue_head + BROKER_QUEUE_SIZE - _queue_tail;
-        }
-        else
-        {
-            queue_size = _queue_head - _queue_tail;
-        }
-        return queue_size;
-    }
+    size_t queueSize();
 
     bool _should_run = true;
 
-    HashmapTree<std::string, std::pair<handle, Callback>> _tree;  // instead of callback - hash of handle and callback
+    // instead of just callback - hash of handle and callback for identification
+    HashmapTree<std::string, std::pair<handle, Callback>> _tree;
 
     size_t _queue_tail = 0; /* where broker use */
     size_t _queue_head = 0; /* where new objects pushed */
     std::tuple<std::string, void*, size_t> _buffer[BROKER_QUEUE_SIZE];
 };
+
+}  // namespace insideJob
