@@ -1,5 +1,7 @@
+#include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "broker.h"
 
@@ -33,6 +35,18 @@ int main(int argc, char const *argv[])
     broker.publish("main/test2", NULL, 0);
 
     broker.printBuffer();
-    broker.run();
+    broker.start();
+
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(1s);
+
+    std::cout << "publish\n";
+    broker.publish("main/test2", NULL, 0);
+    broker.publish("main/test2", NULL, 0);
+    std::this_thread::sleep_for(1s);
+
+    broker.publish("main/test2", NULL, 0);
+    broker.publish("main/test2", NULL, 0);
+    std::this_thread::sleep_for(5s);
     return 0;
 }

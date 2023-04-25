@@ -55,7 +55,23 @@ class Broker
     }
     void remove_sub(const std::string& topic, const handle& hand);
 
-    static void start(Broker<buffer_size>* that) { that->run(); }
+    void start()
+    {
+        std::thread thread(entry, this);
+        thread.detach();
+    }
+
+    void printBuffer()
+    {
+        for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % buffer_size)
+        {
+            const auto [f, s, l] = _buffer[i];
+            std::cout << "pos: " << i << " data: " << f << " num: " << l << '\n';
+        }
+    }
+
+   private:
+    static void entry(Broker<buffer_size>* that) { that->run(); }
 
     void run()
     {
@@ -64,13 +80,13 @@ class Broker
             // sleep if buffer empty
             if (queueSize() == 0)
             {
-                break;  // TODO: remove that after tests
-                // std::this_thread::sleep_for(10ms);
-                // continue;
+                // TODO: replace with semaphore
+                std::this_thread::sleep_for(10ms);
+                continue;
             }
 
             // pull from buffer
-            auto [str, data, len] = _buffer[_queue_tail];
+            const auto [str, data, len] = _buffer[_queue_tail];
 
             // release queue space
             _queue_tail = (_queue_tail + 1) % buffer_size;
@@ -89,16 +105,6 @@ class Broker
         }
     }
 
-    void printBuffer()
-    {
-        for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % buffer_size)
-        {
-            const auto [f, s, l] = _buffer[i];
-            std::cout << "pos: " << i << " data: " << f << " num: " << l << '\n';
-        }
-    }
-
-   private:
     std::vector<std::string> parseTopic(const std::string& topic)
     {
         constexpr char delimiter = '/';
@@ -137,7 +143,7 @@ class Broker
         size_t queue_size = 0;
         if (_queue_head < _queue_tail)
         {
-            queue_size = _queue_head + _queue_tail - buffer_size;
+            queue_size = _queue_head + buffer_size - _queue_tail;
         }
         else
         {
