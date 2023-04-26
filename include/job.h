@@ -4,7 +4,7 @@
 
 class Job
 {
-   public:
+public:
     Job(/* args */);
     ~Job();
 
@@ -14,5 +14,5 @@ class Job
     static void run_tx();
     static void run_rx();
 
-   private:
+private:
 };

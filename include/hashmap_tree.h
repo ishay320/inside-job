@@ -7,7 +7,7 @@
 template <class K, class V>
 class HashmapTree
 {
-   public:
+public:
     HashmapTree() {}
     ~HashmapTree()
     {
@@ -18,7 +18,7 @@ class HashmapTree
     }
 
     typedef bool (*cmpFunc)(V a, V b);
-    bool remove(const K* topic, V value, cmpFunc cmp);  // TODO: Implement this
+    bool remove(const K* topic, V value, cmpFunc cmp); // TODO: Implement this
 
     bool insert(const K* topic, size_t len, V data)
     {
@@ -45,7 +45,7 @@ class HashmapTree
         return out;
     }
 
-   private:
+private:
     bool get_rec(const K* topic, size_t len, std::vector<V>& out)
     {
         if (len == 0)

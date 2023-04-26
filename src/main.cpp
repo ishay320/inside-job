@@ -6,7 +6,7 @@
 #include "broker.h"
 #define UNUSED(x) (void)x
 
-bool foo(void *data, size_t len)
+bool foo(void* data, size_t len)
 {
     UNUSED(data);
     UNUSED(len);
@@ -14,7 +14,7 @@ bool foo(void *data, size_t len)
     return true;
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char const* argv[])
 {
     UNUSED(argc);
     UNUSED(argv);
@@ -25,7 +25,7 @@ int main(int argc, char const *argv[])
 
     broker.subscribe("main/test", c, foo);
     broker.subscribe("main/test2", c,
-                     [](void *data, size_t len) -> bool
+                     [](void* data, size_t len) -> bool
                      {
                          UNUSED(data);
                          UNUSED(len);

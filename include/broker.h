@@ -17,7 +17,7 @@ typedef bool (*Callback)(void* data, size_t len);
 
 class Broker
 {
-   public:
+public:
     Broker();
     ~Broker();
 
@@ -29,10 +29,11 @@ class Broker
     void remove_sub(const std::string& topic, const handle& hand);
 
     void start();
+    void stop();
 
     void printBuffer();
 
-   private:
+private:
     static void entry(Broker* that);
 
     void run();
@@ -55,4 +56,4 @@ class Broker
     std::tuple<std::string, void*, size_t> _buffer[BROKER_QUEUE_SIZE];
 };
 
-}  // namespace insideJob
+} // namespace insideJob

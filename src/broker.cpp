@@ -43,7 +43,8 @@ void Broker::subscribe(const std::string& topic, const handle& hand, Callback ca
     std::vector<std::string> parsed_topic;
     parsed_topic = parseTopic(topic);
 
-    _tree.insert(parsed_topic.data(), parsed_topic.size(), std::pair<handle, Callback>{hand, callback});
+    _tree.insert(parsed_topic.data(), parsed_topic.size(),
+                 std::pair<handle, Callback>{hand, callback});
 }
 void Broker::remove_sub(const std::string& topic, const handle& hand)
 {
@@ -58,6 +59,11 @@ void Broker::start()
     thread.detach();
 }
 
+void Broker::stop()
+{
+    _should_run = false;
+}
+
 void Broker::printBuffer()
 {
     for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % BROKER_QUEUE_SIZE)
@@ -67,7 +73,10 @@ void Broker::printBuffer()
     }
 }
 
-void Broker::entry(Broker* that) { that->run(); }
+void Broker::entry(Broker* that)
+{
+    that->run();
+}
 
 void Broker::run()
 {
@@ -149,4 +158,4 @@ size_t Broker::queueSize()
     return queue_size;
 }
 
-}  // namespace insideJob
+} // namespace insideJob
