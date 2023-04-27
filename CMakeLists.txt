@@ -13,6 +13,12 @@ set(CMAKE_CXX_STANDARD 17)
 # Add compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
+option(BROKER_QUEUE_SIZE "Set the broker queue size")
+
+if(BROKER_QUEUE_SIZE)
+    add_definitions(-DBROKER_QUEUE_SIZE=${BROKER_QUEUE_SIZE})
+endif()
+
 find_package(Threads REQUIRED)
 
 include_directories(include)

@@ -2,15 +2,19 @@
 
 "Inside Job" is a package that manages the transfer of messages within a single process between threads using pointers and callbacks, enabling efficient and lightweight communication between the threads. It utilizes an MQTT-like approach, utilizing publish/subscribe patterns to transfer data through callbacks.
 
-## Installation
+## Installation - wip not installing yet
 
 To install the Inside Job package, simply clone the repository and build the project using your preferred build system.
 
 ```sh
 $ git clone https://github.com/ishay320/inside-job
 $ cd inside-job
-$ make
+$ mkdir build
+$ cmake ..
+$ sudo make install
 ```
+
+The default queue of broker is `4096` but can be change in compilation using `$ cmake -DBROKER_QUEUE_SIZE=<queue-size> ..`
 
 ## Usage
 
@@ -23,10 +27,10 @@ The Broker class is used to manage connections and message transfer. To create a
 ```cpp
 #include "broker.h"
 
-Broker<5> broker(); // create a broker with buffer size of 5
+Broker broker();
 ```
 
-The template parameter specifies the size of the broker buffer.
+The broker will be pass to all threads by pointer or reference.
 
 ## Subscribe
 
