@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <tuple>
 
@@ -13,7 +14,7 @@ namespace insideJob
 {
 
 typedef size_t handle;
-typedef bool (*Callback)(void* data, size_t len);
+typedef std::function<bool(void*, size_t)> Callback;
 
 class Broker
 {
