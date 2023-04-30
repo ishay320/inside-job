@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(insidejob
-        VERSION 0.0.1
-        LANGUAGES CXX
-        DESCRIPTION "Inside Job is a package that \
+    VERSION 0.0.1
+    LANGUAGES CXX
+    DESCRIPTION "Inside Job is a package that \
         manages the transfer of messages within a single process \
         between threads using pointers and callbacks"
-        )
+)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -23,8 +23,8 @@ find_package(Threads REQUIRED)
 
 include_directories(include)
 
-set(SOURCES 
-    src/main.cpp
+set(SOURCES
+    test/main.cpp
     src/broker.cpp
 )
 
