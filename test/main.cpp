@@ -5,6 +5,7 @@
 
 #include "broker.h"
 #include "node.h"
+#include "utils.h"
 #define UNUSED(x) (void)x
 // TODO: node tests
 
@@ -37,7 +38,7 @@ bool test_hashMapTree()
                                { return a.first == b.first; });
         if (!ret)
         {
-            std::cout << "failed at removing num 2\n";
+            LOG_ERROR("failed at removing num 2");
             return false;
         }
     }
@@ -56,7 +57,7 @@ bool test_hashMapTree()
                                { return a.first == b.first; });
         if (!ret)
         {
-            std::cout << "failed at removing num 1\n";
+            LOG_ERROR("failed at removing num 1");
             return false;
         }
     }
@@ -91,7 +92,7 @@ bool test_runAndStop()
     std::this_thread::sleep_for(20ms);
     if (!received)
     {
-        std::cout << "broker did not started\n";
+        LOG_ERROR("broker did not started");
         return false;
     }
 
@@ -102,7 +103,7 @@ bool test_runAndStop()
     std::this_thread::sleep_for(20ms);
     if (received)
     {
-        std::cout << "broker did not stopped\n";
+        LOG_ERROR("broker did not stopped");
         return false;
     }
     return true;
@@ -120,14 +121,14 @@ bool test_brokerLimit()
         err = broker.publish("", NULL, 0);
         if (!err)
         {
-            std::cout << "failed in normal publish\n";
+            LOG_ERROR("failed in normal publish");
             return false;
         }
     }
     err = broker.publish("", NULL, 0);
     if (err)
     {
-        std::cout << "failed in overflow publish\n";
+        LOG_ERROR("failed in overflow publish");
         return false;
     }
     return true;
@@ -149,19 +150,22 @@ int main(int argc, char const* argv[])
                     {test_runAndStop, "test_runAndStop"},
                     {test_hashMapTree, "test_hashMapTree"}};
 
-    for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
+    const size_t test_len = sizeof(tests) / sizeof(tests[0]);
+    for (size_t i = 0; i < test_len; i++)
     {
         if (!tests[i].test())
         {
             std::cout << "\033[31m"
-                      << "[-] Test `" << tests[i].name << "` failed"
+                      << "[-] Test " << i + 1 << '/' << test_len << " '" << tests[i].name
+                      << "' failed "
                       << " \033[0m"
                       << "\n";
         }
         else
         {
             std::cout << "\033[32m"
-                      << "[+] Test `" << tests[i].name << "` pass"
+                      << "[+] Test " << i + 1 << '/' << test_len << " '" << tests[i].name
+                      << "' pass "
                       << " \033[0m"
                       << "\n";
         }
@@ -188,14 +192,14 @@ static bool _checkRemoved(HashmapTree<std::string, std::pair<insideJob::handle, 
     {
         if (++count != i.first)
         {
-            std::cout << "failed at receiving " << count << "received " << i.first << '\n';
+            LOG_ERROR("failed at receiving " << count << "received " << i.first);
             return false;
         }
     }
     if (count != expected_count)
     {
-        std::cout << "failed at receiving all the data, received " << count << " of "
-                  << expected_count << "\n";
+        LOG_ERROR("failed at receiving all the data, received " << count << " of "
+                                                                << expected_count);
         return false;
     }
     return true;
