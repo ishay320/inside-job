@@ -18,7 +18,58 @@ public:
     }
 
     typedef bool (*cmpFunc)(V a, V b);
-    bool remove(const K* topic, V value, cmpFunc cmp); // TODO: Implement this
+
+    bool remove(const K* topic, size_t len, V value, cmpFunc cmp)
+    {
+        if (len == 0)
+        {
+            return false;
+        }
+
+        // get the node
+        auto node = _tree.find(topic[0]);
+        if (node == _tree.end())
+        {
+            return false;
+        }
+        for (size_t i = 1; i < len; i++)
+        {
+            node = node->second->_tree.find(topic[i]);
+            if (node == _tree.end())
+            {
+                return false;
+            }
+        }
+
+        // remove the value
+
+        auto data_point = node->second->_data.end();
+        for (auto&& data = node->second->_data.begin(); data != node->second->_data.end(); data++)
+        {
+            if (cmp(*data, value))
+            {
+                data_point = data;
+                break;
+            }
+        }
+        if (data_point != node->second->_data.end())
+        {
+            node->second->_data.erase(data_point);
+        }
+        else
+        {
+            return false;
+        }
+
+        // if node empty remove topic
+        if (node->second->_data.empty())
+        {
+            // TODO: fix it from the parent recursively
+            // delete node;
+        }
+
+        return true;
+    }
 
     bool insert(const K* topic, size_t len, V data)
     {

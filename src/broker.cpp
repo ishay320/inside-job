@@ -46,11 +46,23 @@ void Broker::subscribe(const std::string& topic, const handle& hand, Callback ca
     _tree.insert(parsed_topic.data(), parsed_topic.size(),
                  std::pair<handle, Callback>{hand, callback});
 }
-void Broker::remove_sub(const std::string& topic, const handle& hand)
+
+bool Broker::remove_sub(const std::string& topic, const handle& hand)
 {
-    UNUSED(topic);
-    UNUSED(hand);
-    assert(false && "function not implemented yet");
+    if (topic.empty())
+    {
+        std::cout << "ERROR: topic is empty, cannot unsubscribe\n";
+        return false;
+    }
+
+    std::vector<std::string> parsed_topic;
+    parsed_topic = parseTopic(topic);
+
+    auto cmp_fun = [](std::pair<handle, Callback> a, std::pair<handle, Callback> b) -> bool
+    { return a.first == b.first; };
+
+    return _tree.remove(parsed_topic.data(), parsed_topic.size(),
+                        std::pair<handle, Callback>{hand, nullptr}, cmp_fun);
 }
 
 void Broker::start()
