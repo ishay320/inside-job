@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#define UNUSED(x) (void)x
+
 /* Logging */
 #define LOG_ERROR(...)                                                                             \
     std::cout << "\033[31m" << __FILE__ << ':' << __LINE__ << " "                                  \
@@ -57,4 +59,12 @@ bool run_tests(Test* tests, size_t tests_len, const char* tests_name)
     }
 
     return fail;
+}
+
+void printByLen(void* data, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        printf("%c", ((char*)data)[i]);
+    }
 }

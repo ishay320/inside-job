@@ -29,7 +29,7 @@ set(SOURCES
 
 add_executable(tests_runner "test/tests_runner.cpp")
 set(TEST_SOURCES
-    test/main.cpp
+    test/broker.cpp
     test/hashmap.cpp
 )
 
