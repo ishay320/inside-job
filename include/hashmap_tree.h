@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -42,7 +41,6 @@ public:
         }
 
         // remove the value
-
         auto data_point = node->second->_data.end();
         for (auto&& data = node->second->_data.begin(); data != node->second->_data.end(); data++)
         {

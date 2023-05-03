@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(insidejob
-    VERSION 0.0.1
+    VERSION 0.0.2
     LANGUAGES CXX
     DESCRIPTION "Inside Job is a package that \
         manages the transfer of messages within a single process \
@@ -24,10 +24,27 @@ find_package(Threads REQUIRED)
 include_directories(include)
 
 set(SOURCES
-    test/main.cpp
     src/broker.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(tests_runner "test/tests_runner.cpp")
+set(TEST_SOURCES
+    test/main.cpp
+    test/hashmap.cpp
+)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+set(TESTS "")
+
+foreach(TEST ${TEST_SOURCES})
+    get_filename_component(TEST_NAME ${TEST} NAME_WLE)
+    add_executable(${TEST_NAME} ${SOURCES} ${TEST})
+    target_link_libraries(${TEST_NAME} PRIVATE Threads::Threads)
+    list(APPEND TESTS ${TEST_NAME})
+endforeach()
+
+add_custom_target(
+    test
+    COMMAND tests_runner ${TESTS}
+    COMMENT "Running custom commands"
+    DEPENDS ${TESTS}
+)

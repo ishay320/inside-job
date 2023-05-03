@@ -5,7 +5,7 @@
 
 #include "broker.h"
 #include "node.h"
-#include "utils.h"
+#include "tests.h"
 #define UNUSED(x) (void)x
 // TODO: node tests
 
@@ -134,41 +134,17 @@ bool test_brokerLimit()
     return true;
 }
 
-typedef bool (*TestFun)();
-typedef struct
+Test tests[]           = {{test_brokerLimit, "test_brokerLimit"},
+                          {test_runAndStop, "test_runAndStop"},
+                          {test_hashMapTree, "test_hashMapTree"}};
+const size_t tests_len = sizeof(tests) / sizeof(tests[0]);
+
+int main(void)
 {
-    TestFun test;
-    const char* name;
-} Test;
-
-int main(int argc, char const* argv[])
-{
-    UNUSED(argv);
-    UNUSED(argc);
-
-    Test tests[] = {{test_brokerLimit, "test_brokerLimit"},
-                    {test_runAndStop, "test_runAndStop"},
-                    {test_hashMapTree, "test_hashMapTree"}};
-
-    const size_t test_len = sizeof(tests) / sizeof(tests[0]);
-    for (size_t i = 0; i < test_len; i++)
+    if (run_tests(tests, tests_len, "main"))
     {
-        if (!tests[i].test())
-        {
-            std::cout << "\033[31m"
-                      << "[-] Test " << i + 1 << '/' << test_len << " '" << tests[i].name
-                      << "' failed "
-                      << " \033[0m"
-                      << "\n";
-        }
-        else
-        {
-            std::cout << "\033[32m"
-                      << "[+] Test " << i + 1 << '/' << test_len << " '" << tests[i].name
-                      << "' pass "
-                      << " \033[0m"
-                      << "\n";
-        }
+        LOG_ERROR("main tests failed");
+        return 1;
     }
 
     return 0;
