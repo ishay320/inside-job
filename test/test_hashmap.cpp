@@ -2,16 +2,22 @@
 #include "hashmap_tree.h"
 #include "tests.h"
 
-/** @brief helper function */
-static bool _checkRemoved(HashmapTree<std::string, std::pair<insideJob::handle, std::string>>& hash,
-                          std::vector<std::string>& topic, insideJob::handle expected_count);
+/* Globals */
+using hashTree     = HashmapTree<std::string, std::pair<insideJob::handle, std::string>>;
+const auto cmp_fun = [](std::pair<insideJob::handle, std::string> a,
+                        std::pair<insideJob::handle, std::string> b) -> bool
+{ return a.first == b.first; };
+
+/* Helpers functions */
+static bool _checkRemoved(hashTree& hash, std::vector<std::string>& topic,
+                          insideJob::handle expected_count);
 
 /**
  * @brief check that insert get and remove working correctly
  */
 bool test_hashMapTree()
 {
-    HashmapTree<std::string, std::pair<insideJob::handle, std::string>> hash;
+    hashTree hash;
 
     std::vector<std::string> topic = {"hello", "world"};
     hash.insert(topic.data(), topic.size(), {1, "hi mom"});
@@ -25,11 +31,7 @@ bool test_hashMapTree()
 
     // Remove num 2
     {
-        bool ret = hash.remove(topic.data(), topic.size(), {2, ""},
-                               [](std::pair<insideJob::handle, std::string> a,
-                                  std::pair<insideJob::handle, std::string> b) -> bool
-                               { return a.first == b.first; });
-        if (!ret)
+        if (!hash.remove(topic.data(), topic.size(), {2, ""}, cmp_fun))
         {
             LOG_ERROR("failed at removing num 2");
             return false;
@@ -44,11 +46,7 @@ bool test_hashMapTree()
 
     // Remove num 1
     {
-        bool ret = hash.remove(topic.data(), topic.size(), {1, ""},
-                               [](std::pair<insideJob::handle, std::string> a,
-                                  std::pair<insideJob::handle, std::string> b) -> bool
-                               { return a.first == b.first; });
-        if (!ret)
+        if (!hash.remove(topic.data(), topic.size(), {1, ""}, cmp_fun))
         {
             LOG_ERROR("failed at removing num 1");
             return false;
@@ -63,6 +61,8 @@ bool test_hashMapTree()
     return true;
 }
 
+
+/* Tests Running */
 Test tests[]           = {{test_hashMapTree, "test_hashMapTree"}};
 const size_t tests_len = sizeof(tests) / sizeof(tests[0]);
 
@@ -77,8 +77,8 @@ int main(void)
     return 0;
 }
 
-static bool _checkRemoved(HashmapTree<std::string, std::pair<insideJob::handle, std::string>>& hash,
-                          std::vector<std::string>& topic, insideJob::handle expected_count)
+static bool _checkRemoved(hashTree& hash, std::vector<std::string>& topic,
+                          insideJob::handle expected_count)
 {
     std::vector<std::pair<insideJob::handle, std::string>> hw =
         hash.get(topic.data(), topic.size());
