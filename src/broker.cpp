@@ -36,7 +36,7 @@ void Broker::subscribe(const std::string& topic, const handle& hand, Callback ca
 {
     if (topic.empty())
     {
-        std::cout << "ERROR: topic is empty, cannot subscribe\n";
+        _tree.insert(NULL, 0, std::pair<handle, Callback>{hand, callback});
         return;
     }
 

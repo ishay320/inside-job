@@ -1,3 +1,5 @@
+#pragma once
+
 #include "broker.h"
 
 #include <functional>
@@ -7,33 +9,28 @@
 namespace insideJob
 {
 
-class node
+class Subscriber
 {
 public:
-    node(Broker& broker) : _broker(broker)
+    Subscriber(Broker& broker) : _broker(broker)
     {
         _hand  = broker.connect();
         _queue = new std::queue<std::pair<void*, size_t>>;
     }
-    ~node()
+    ~Subscriber()
     {
         // TODO: remove from the broker then delete queue
-    }
-
-    void publish(const std::string& topic, void* data, size_t len)
-    {
-        _broker.publish(topic, data, len);
     }
 
     void subscribe(const std::string& topic)
     {
 
         Callback callback =
-            std::bind(&node::pushData, *this, std::placeholders::_1, std::placeholders::_2);
+            std::bind(&Subscriber::pushData, *this, std::placeholders::_1, std::placeholders::_2);
         _broker.subscribe(topic, _hand, callback);
     }
 
-    bool queueEmpty() { return _queue->empty(); }
+    bool queueEmpty() const { return _queue->empty(); }
 
     std::pair<void*, size_t> popData()
     {

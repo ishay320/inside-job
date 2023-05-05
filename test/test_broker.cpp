@@ -44,6 +44,67 @@ bool test_runAndStop()
 }
 
 /**
+ * @brief check if the broker can parse the empty topic
+ */
+bool test_emptyTopic()
+{
+    insideJob::Broker broker;
+    broker.start();
+    // check that its running
+    insideJob::handle hand1 = broker.connect();
+    bool received1          = false;
+    insideJob::handle hand2 = broker.connect();
+    bool received2          = false;
+
+    broker.subscribe("/", hand1,
+                     [&received1](const void*, size_t) -> bool
+                     {
+                         received1 = true;
+                         return true;
+                     });
+    broker.subscribe("", hand2,
+                     [&received2](const void*, size_t) -> bool
+                     {
+                         received2 = true;
+                         return true;
+                     });
+    broker.publish("/", NULL, 0);
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(20ms);
+    if (!received1)
+    {
+        LOG_ERROR("topic '/' not pares correctly when pushed '/'");
+        return false;
+    }
+    if (!received2)
+    {
+        LOG_ERROR("topic '' not pares correctly when pushed '/'");
+        return false;
+    }
+
+    // Reset
+    received1 = false;
+    received2 = false;
+
+    broker.publish("", NULL, 0);
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(20ms);
+    if (!received1)
+    {
+        LOG_ERROR("topic '/' not pares correctly when pushed ''");
+        return false;
+    }
+    if (!received2)
+    {
+        LOG_ERROR("topic '' not pares correctly when pushed ''");
+        return false;
+    }
+
+    broker.stop();
+    return true;
+}
+
+/**
  * @brief this test tests the limit of the broker queue
  */
 bool test_brokerLimit()
@@ -73,6 +134,7 @@ bool test_brokerLimit()
 Test tests[] = {
     {test_brokerLimit, "test_brokerLimit"},
     {test_runAndStop, "test_runAndStop"},
+    {test_emptyTopic, "test_emptyTopic"},
 };
 const size_t tests_len = sizeof(tests) / sizeof(tests[0]);
 

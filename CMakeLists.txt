@@ -27,18 +27,21 @@ set(SOURCES
     src/broker.cpp
 )
 
+add_library(insideJob ${SOURCES})
+
 add_executable(tests_runner "test/tests_runner.cpp")
 set(TEST_SOURCES
     test/test_broker.cpp
     test/test_hashmap.cpp
+    test/test_pub_sub.cpp
 )
 
 set(TESTS "")
 
 foreach(TEST ${TEST_SOURCES})
     get_filename_component(TEST_NAME ${TEST} NAME_WLE)
-    add_executable(${TEST_NAME} ${SOURCES} ${TEST})
-    target_link_libraries(${TEST_NAME} PRIVATE Threads::Threads)
+    add_executable(${TEST_NAME} ${TEST})
+    target_link_libraries(${TEST_NAME} PRIVATE Threads::Threads insideJob)
     list(APPEND TESTS ${TEST_NAME})
 endforeach()
 
