@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "hashmap_tree.h"
 
@@ -54,7 +55,7 @@ private:
 
     size_t _queue_tail = 0; /* where broker use */
     size_t _queue_head = 0; /* where new objects pushed */
-    std::tuple<std::string, void*, size_t> _buffer[BROKER_QUEUE_SIZE];
+    std::tuple<std::vector<std::string>, void*, size_t> _buffer[BROKER_QUEUE_SIZE];
 };
 
 } // namespace insideJob

@@ -28,18 +28,13 @@ bool Broker::publish(const std::string& topic, void* data, size_t len)
         return false;
     }
 
-    _buffer[queue_pos] = std::make_tuple(topic, data, len);
+    std::vector<std::string> parsed_topic = parseTopic(topic);
+    _buffer[queue_pos]                    = std::make_tuple(parsed_topic, data, len);
     return true;
 }
 
 void Broker::subscribe(const std::string& topic, const handle& hand, Callback callback)
 {
-    if (topic.empty())
-    {
-        _tree.insert(NULL, 0, std::pair<handle, Callback>{hand, callback});
-        return;
-    }
-
     std::vector<std::string> parsed_topic;
     parsed_topic = parseTopic(topic);
 
@@ -80,8 +75,13 @@ void Broker::printBuffer()
 {
     for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % BROKER_QUEUE_SIZE)
     {
-        const auto [f, s, l] = _buffer[i];
-        std::cout << "pos: " << i << " data: " << f << " num: " << l << '\n';
+        const auto [topic, s, l] = _buffer[i];
+        std::cout << "pos: " << i << " data: ";
+        for (auto&& entry : topic)
+        {
+            std::cout << entry << '/';
+        }
+        std::cout << " num: " << l << '\n';
     }
 }
 
@@ -104,13 +104,10 @@ void Broker::run()
         }
 
         // pull from buffer
-        const auto [str, data, len] = _buffer[_queue_tail];
+        const auto [topic, data, len] = _buffer[_queue_tail];
 
         // release queue space
         _queue_tail = (_queue_tail + 1) % BROKER_QUEUE_SIZE;
-
-        // parse
-        auto topic = parseTopic(str);
 
         // get clients from tree
         std::vector<std::pair<handle, Callback>> clients = _tree.get(topic.data(), topic.size());
@@ -123,15 +120,26 @@ void Broker::run()
     }
 }
 
+// TODO: better check with more elegant algo and trimming
 std::vector<std::string> Broker::parseTopic(const std::string& topic)
 {
     constexpr char delimiter = '/';
     std::vector<std::string> parsed_topic;
+    if (topic.empty() || topic == "/")
+    {
+        return {};
+    }
 
     size_t last = 0;
     size_t next = 0;
     while ((next = topic.find(delimiter, last)) != std::string::npos)
     {
+        if (next - last == 0)
+        {
+            last = next + 1;
+            continue;
+        }
+
         parsed_topic.push_back(topic.substr(last, next - last));
         last = next + 1;
     }
