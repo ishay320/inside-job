@@ -47,7 +47,7 @@ int main(int argc, char const* argv[])
         if (code)
         {
             std::cout << "\033[31m[-] Test `" << argv[i] << "` failed\033[0m\n";
-            ret = 1;
+            ret++;
         }
     }
 
