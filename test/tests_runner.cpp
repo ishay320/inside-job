@@ -30,7 +30,7 @@ int execAndWait(const std::string& path, const std::string& file)
     {
         int status;
         waitpid(pid, &status, 0);
-        return WEXITSTATUS(status);
+        return status;
     }
     LOG_ERROR("how???");
     return -1;
@@ -46,7 +46,8 @@ int main(int argc, char const* argv[])
         int code = execAndWait(".", argv[i]);
         if (code)
         {
-            std::cout << "\033[31m[-] Test `" << argv[i] << "` failed\033[0m" << std::endl;
+            std::cout << "\033[31m[-] Test `" << argv[i] << "` failed, code " << code << "\033[0m"
+                      << std::endl;
             ret++;
         }
     }

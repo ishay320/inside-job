@@ -13,9 +13,65 @@ static bool _checkRemoved(hashTree& hash, std::vector<std::string>& topic,
                           insideJob::handle expected_count);
 
 /**
+ * @brief check that insert in the tree in the right order and get it the same
+ */
+bool test_subTopics()
+{
+    hashTree hash;
+
+    std::vector<std::string> topic1     = {"hello", "world"};
+    std::vector<std::string> topic1_1   = {"hello"};
+    std::vector<std::string> topic2     = {"world"};
+    std::vector<std::string> topic_root = {};
+    hash.insert(topic1_1.data(), topic1_1.size(), {2, "haius"});
+    hash.insert(topic1.data(), topic1.size(), {1, "hi mom"});
+    hash.insert(topic2.data(), topic2.size(), {2, "hello mom"});
+    hash.insert(topic2.data(), topic2.size(), {2, "hello mom"});
+
+    {
+        std::vector<std::pair<insideJob::handle, std::string>> root =
+            hash.get(topic_root.data(), topic_root.size());
+        if (root.size() != 4)
+        {
+            LOG_ERROR("root wont get all the subtopics");
+            return 1;
+        }
+    }
+    {
+        std::vector<std::pair<insideJob::handle, std::string>> hw =
+            hash.get(topic1.data(), topic1.size());
+        if (hw.size() != 1)
+        {
+            LOG_ERROR("topic1 not correctly get");
+            return 1;
+        }
+    }
+    {
+        std::vector<std::pair<insideJob::handle, std::string>> hw =
+            hash.get(topic1_1.data(), topic1_1.size());
+        if (hw.size() != 2)
+        {
+            LOG_ERROR("topic1_1 not correctly get");
+            return 1;
+        }
+    }
+    {
+        std::vector<std::pair<insideJob::handle, std::string>> w =
+            hash.get(topic2.data(), topic2.size());
+        if (w.size() != 2)
+        {
+            LOG_ERROR("topic2 not correctly get");
+            return 1;
+        }
+    }
+
+    return true;
+}
+
+/**
  * @brief check that insert get and remove working correctly
  */
-bool test_hashMapTree()
+bool test_addAndRemove()
 {
     hashTree hash;
 
@@ -61,19 +117,27 @@ bool test_hashMapTree()
     return true;
 }
 
-
 /* Tests Running */
-Test tests[]           = {{test_hashMapTree, "test_hashMapTree"}};
+Test tests[] = {
+    {test_addAndRemove, "test_addAndRemove"},
+    {test_subTopics, "test_subTopics"},
+};
 const size_t tests_len = sizeof(tests) / sizeof(tests[0]);
 
 int main(void)
 {
-    if (run_tests(tests, tests_len, "main"))
+    try
     {
-        LOG_ERROR("main tests failed");
+        if (run_tests(tests, tests_len, "hashmap tree"))
+        {
+            return 1;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
         return 1;
     }
-
     return 0;
 }
 

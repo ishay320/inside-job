@@ -78,11 +78,17 @@ const size_t tests_len = sizeof(tests) / sizeof(tests[0]);
 
 int main(void)
 {
-    if (run_tests(tests, tests_len, "main"))
+    try
     {
-        LOG_ERROR("main tests failed");
+        if (run_tests(tests, tests_len, "broker"))
+        {
+            return 1;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
         return 1;
     }
-
     return 0;
 }
