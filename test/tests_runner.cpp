@@ -42,11 +42,11 @@ int main(int argc, char const* argv[])
     for (int i = 1; i < argc; i++)
     {
         std::cout << "\033[34m[" << i << '/' << argc - 1 << "] Running `" << argv[i]
-                  << "` test\033[0m\n";
+                  << "` test\033[0m" << std::endl;
         int code = execAndWait(".", argv[i]);
         if (code)
         {
-            std::cout << "\033[31m[-] Test `" << argv[i] << "` failed\033[0m\n";
+            std::cout << "\033[31m[-] Test `" << argv[i] << "` failed\033[0m" << std::endl;
             ret++;
         }
     }

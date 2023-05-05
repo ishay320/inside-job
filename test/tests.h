@@ -7,7 +7,11 @@
 /* Logging */
 #define LOG_ERROR(...)                                                                             \
     std::cout << "\033[31m" << __FILE__ << ':' << __LINE__ << " "                                  \
-              << "[ERROR] \033[0m" << __VA_ARGS__ << "\n"
+              << "[ERROR] \033[0m" << __VA_ARGS__ << std::endl
+
+#define LOG_FAIL(...)                                                                              \
+    std::cout << "\033[31m" << __FILE__ << ':' << __LINE__ << " "                                  \
+              << "  [FAIL] \033[0m" << __VA_ARGS__ << std::endl
 
 #define LOG_INFO(...)                                                                              \
     std::cout << "\033[32m" << __FILE__ << ':' << __LINE__ << " "                                  \
@@ -40,16 +44,14 @@ bool run_tests(Test* tests, size_t tests_len, const char* tests_name)
             std::cout << "\033[31m"
                       << "[-] Test " << i + 1 << '/' << tests_len << " '" << tests[i].name
                       << "' failed "
-                      << " \033[0m"
-                      << "\n";
+                      << " \033[0m" << std::endl;
         }
         else
         {
             std::cout << "\033[32m"
                       << "[+] Test " << i + 1 << '/' << tests_len << " '" << tests[i].name
                       << "' pass "
-                      << " \033[0m"
-                      << "\n";
+                      << " \033[0m" << std::endl;
         }
     }
 
