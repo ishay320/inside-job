@@ -110,7 +110,8 @@ void Broker::run()
         _queue_tail = (_queue_tail + 1) % BROKER_QUEUE_SIZE;
 
         // get clients from tree
-        std::vector<std::pair<handle, Callback>> clients = _tree.get(topic.data(), topic.size());
+        std::vector<std::pair<handle, Callback>> clients =
+            _tree.getPath(topic.data(), topic.size());
 
         // push
         for (auto&& client : clients)

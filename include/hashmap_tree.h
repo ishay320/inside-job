@@ -87,10 +87,43 @@ public:
         return node->insert(topic + 1, len - 1, data);
     }
 
-    std::vector<V> get(const K* topic, size_t len)
+    std::vector<V> getDown(const K* topic, size_t len)
     {
         std::vector<V> out;
         get_rec(topic, len, out);
+        return out;
+    }
+
+    std::vector<V> getPath(const K* topic, size_t len)
+    {
+        std::vector<V> out;
+
+        // Insert the root data
+        out.insert(out.end(), _data.begin(), _data.end());
+
+        if (len == 0)
+        {
+            return out;
+        }
+
+        auto search = _tree.find(topic[0]);
+        if (search == _tree.end())
+        {
+            return out;
+        }
+        const HashmapTree* tree_pos = search->second;
+        for (size_t i = 0; i < len; i++)
+        {
+            out.insert(out.end(), tree_pos->_data.begin(), tree_pos->_data.end());
+
+            auto search = tree_pos->_tree.find(topic[i + 1]);
+            if (search == tree_pos->_tree.end())
+            {
+                break;
+            }
+            tree_pos = search->second;
+        }
+
         return out;
     }
 
