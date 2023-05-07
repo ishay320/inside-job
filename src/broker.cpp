@@ -69,6 +69,7 @@ void Broker::start()
 void Broker::stop()
 {
     _should_run = false;
+    // TODO: wait for the loop to stop using semaphore and delete all
 }
 
 void Broker::printBuffer()

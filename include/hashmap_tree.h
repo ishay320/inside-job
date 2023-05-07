@@ -101,27 +101,17 @@ public:
         // Insert the root data
         out.insert(out.end(), _data.begin(), _data.end());
 
-        if (len == 0)
-        {
-            return out;
-        }
-
-        auto search = _tree.find(topic[0]);
-        if (search == _tree.end())
-        {
-            return out;
-        }
-        const HashmapTree* tree_pos = search->second;
+        HashmapTree* tree_pos = this;
         for (size_t i = 0; i < len; i++)
         {
-            out.insert(out.end(), tree_pos->_data.begin(), tree_pos->_data.end());
-
-            auto search = tree_pos->_tree.find(topic[i + 1]);
+            auto search = tree_pos->_tree.find(topic[0]);
             if (search == tree_pos->_tree.end())
             {
                 break;
             }
             tree_pos = search->second;
+
+            out.insert(out.end(), tree_pos->_data.begin(), tree_pos->_data.end());
         }
 
         return out;
