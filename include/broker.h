@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <semaphore.h>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -55,6 +56,7 @@ private:
 
     size_t _queue_tail = 0; /* where broker use */
     size_t _queue_head = 0; /* where new objects pushed */
+    sem_t work;
     std::tuple<std::vector<std::string>, void*, size_t> _buffer[BROKER_QUEUE_SIZE];
 };
 

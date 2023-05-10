@@ -23,7 +23,7 @@ bool test_runAndStop()
                      });
     broker.publish("/", NULL, 0);
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(20ms);
+    std::this_thread::sleep_for(1ms);
     if (!received)
     {
         LOG_ERROR("broker did not started");
@@ -34,7 +34,7 @@ bool test_runAndStop()
     // check that it stopped
     received = false;
     broker.publish("/", NULL, 0);
-    std::this_thread::sleep_for(20ms);
+    std::this_thread::sleep_for(1ms);
     if (received)
     {
         LOG_ERROR("broker did not stopped");

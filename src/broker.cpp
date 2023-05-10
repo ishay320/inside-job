@@ -10,8 +10,15 @@
 
 namespace insideJob
 {
-Broker::Broker() {}
-Broker::~Broker() {}
+Broker::Broker()
+{
+    sem_init(&work, 0, 0);
+}
+
+Broker::~Broker()
+{
+    sem_destroy(&work);
+}
 
 handle Broker::connect()
 {
@@ -30,6 +37,7 @@ bool Broker::publish(const std::string& topic, void* data, size_t len)
 
     std::vector<std::string> parsed_topic = parseTopic(topic);
     _buffer[queue_pos]                    = std::make_tuple(parsed_topic, data, len);
+    sem_post(&work);
     return true;
 }
 
@@ -98,9 +106,7 @@ void Broker::run()
         // sleep if buffer empty
         if (queueSize() == 0)
         {
-            // TODO: replace with semaphore
-            using namespace std::chrono_literals;
-            std::this_thread::sleep_for(10ms);
+            sem_wait(&work);
             continue;
         }
 
