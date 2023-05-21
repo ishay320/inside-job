@@ -16,7 +16,7 @@ bool test_runAndStop()
     bool received          = false;
 
     broker.subscribe("/", hand,
-                     [&received](const void*, size_t) -> bool
+                     [&received](const std::shared_ptr<void>&, size_t) -> bool
                      {
                          received = true;
                          return true;
@@ -57,13 +57,13 @@ bool test_emptyTopic()
     bool received2          = false;
 
     broker.subscribe("/", hand1,
-                     [&received1](const void*, size_t) -> bool
+                     [&received1](const std::shared_ptr<void>&, size_t) -> bool
                      {
                          received1 = true;
                          return true;
                      });
     broker.subscribe("", hand2,
-                     [&received2](const void*, size_t) -> bool
+                     [&received2](const std::shared_ptr<void>&, size_t) -> bool
                      {
                          received2 = true;
                          return true;

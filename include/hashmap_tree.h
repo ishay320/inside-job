@@ -94,7 +94,7 @@ public:
         return out;
     }
 
-    std::vector<V> getPath(const K* topic, size_t len)
+    std::vector<V> getPath(const K* topic, size_t len) // TODO: replace with vector
     {
         std::vector<V> out;
 

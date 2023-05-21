@@ -1,9 +1,10 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <semaphore.h>
 #include <string>
-#include <tuple>
+#include <thread>
 #include <vector>
 
 #include "hashmap_tree.h"
@@ -16,7 +17,7 @@ namespace insideJob
 {
 
 typedef size_t handle;
-typedef std::function<bool(void*, size_t)> Callback;
+typedef std::function<bool(std::shared_ptr<void>, size_t)> Callback;
 
 class Broker
 {
@@ -51,6 +52,7 @@ private:
 
     size_t queueSize();
 
+    std::thread _thread;
     bool _should_run = true;
 
     // instead of just callback - hash of handle and callback for identification
@@ -58,8 +60,16 @@ private:
 
     size_t _queue_tail = 0; /* where broker use */
     size_t _queue_head = 0; /* where new objects pushed */
-    sem_t work;
-    std::tuple<std::vector<std::string>, void*, size_t> _buffer[BROKER_QUEUE_SIZE];
+
+    typedef struct
+    {
+        std::vector<std::string> parsed_topic;
+        std::shared_ptr<void> data_share;
+        size_t len;
+    } Buffer;
+
+    Buffer _buffer[BROKER_QUEUE_SIZE];
+    sem_t _work[BROKER_QUEUE_SIZE];
 };
 
 } // namespace insideJob

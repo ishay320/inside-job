@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <string.h>
 #include <thread>
 
 #define UNUSED(x) (void)x
@@ -12,12 +13,18 @@ namespace insideJob
 {
 Broker::Broker()
 {
-    sem_init(&work, 0, 0);
+    for (size_t i = 0; i < BROKER_QUEUE_SIZE; i++)
+    {
+        sem_init(&_work[i], 0, 0);
+    }
 }
 
 Broker::~Broker()
 {
-    sem_destroy(&work);
+    for (size_t i = 0; i < BROKER_QUEUE_SIZE; i++)
+    {
+        sem_destroy(&_work[i]);
+    }
 }
 
 handle Broker::connect()
@@ -36,8 +43,13 @@ bool Broker::publish(const std::string& topic, void* data, size_t len)
     }
 
     std::vector<std::string> parsed_topic = parseTopic(topic);
-    _buffer[queue_pos]                    = std::make_tuple(parsed_topic, data, len); // copy?
-    sem_post(&work);
+
+    void* data_ptr = malloc(len);
+    memcpy(data_ptr, data, len);
+    std::shared_ptr<void> data_share(data_ptr, free);
+
+    _buffer[queue_pos] = {parsed_topic, data_share, len};
+    sem_post(&_work[queue_pos]);
     return true;
 }
 
@@ -70,13 +82,16 @@ bool Broker::remove_sub(const std::string& topic, const handle& hand)
 
 void Broker::start()
 {
-    std::thread thread(entry, this);
-    thread.detach();
+    _thread = std::thread{entry, this};
+    // _thread.detach();
 }
 
 void Broker::stop()
 {
     _should_run = false;
+    sem_post(&_work[_queue_tail]);
+    _thread.join();
+
     // TODO: wait for the loop to stop using semaphore and delete all
 }
 
@@ -112,12 +127,12 @@ void Broker::run()
         // sleep if buffer empty
         if (queueSize() == 0)
         {
-            sem_wait(&work);
+            sem_wait(&_work[_queue_tail]);
             continue;
         }
 
         // pull from buffer
-        const auto [topic, data, len] = _buffer[_queue_tail];
+        const auto [topic, data, len] = std::move(_buffer[_queue_tail]);
 
         // release queue space
         _queue_tail = (_queue_tail + 1) % BROKER_QUEUE_SIZE;
@@ -131,6 +146,7 @@ void Broker::run()
         {
             client.second(data, len);
         }
+        // FIXME: the vector call delete for all the clients
     }
 }
 

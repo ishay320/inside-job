@@ -15,10 +15,16 @@ public:
     Subscriber(Broker& broker) : _broker(broker)
     {
         _hand  = broker.connect();
-        _queue = new std::queue<std::pair<void*, size_t>>;
+        _queue = new std::queue<std::pair<std::shared_ptr<void>, size_t>>;
     }
     ~Subscriber()
     {
+#if 0 // can be used after fix for broker
+        while (!_queue->empty())
+        {
+            _queue->pop();
+        }
+#endif
         // TODO: remove from the broker then delete queue
     }
 
@@ -32,7 +38,7 @@ public:
 
     bool queueEmpty() const { return _queue->empty(); }
 
-    std::pair<void*, size_t> popData()
+    std::pair<std::shared_ptr<void>, size_t> popData()
     {
         // TODO: lock queue?
         auto ret = _queue->front();
@@ -41,7 +47,7 @@ public:
     }
 
 private:
-    bool pushData(void* data, size_t len)
+    bool pushData(std::shared_ptr<void> data, size_t len)
     {
         _queue->push(std::pair{data, len});
         return true;
@@ -49,7 +55,7 @@ private:
 
     Broker& _broker;
     handle _hand;
-    std::queue<std::pair<void*, size_t>>* _queue;
+    std::queue<std::pair<std::shared_ptr<void>, size_t>>* _queue;
 };
 
 } // namespace insideJob
