@@ -104,7 +104,7 @@ public:
         HashmapTree* tree_pos = this;
         for (size_t i = 0; i < len; i++)
         {
-            auto search = tree_pos->_tree.find(topic[0]);
+            auto search = tree_pos->_tree.find(topic[i]);
             if (search == tree_pos->_tree.end())
             {
                 break;
@@ -115,6 +115,15 @@ public:
         }
 
         return out;
+    }
+
+    void printTopics(void (*print_fun)(K))
+    {
+        for (auto&& n : _tree)
+        {
+            print_fun(n.first);
+            n.second->printTopics(print_fun);
+        }
     }
 
 private:

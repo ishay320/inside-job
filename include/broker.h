@@ -36,6 +36,8 @@ public:
 
     void printBuffer();
 
+    void printTree();
+
 private:
     static void entry(Broker* that);
 

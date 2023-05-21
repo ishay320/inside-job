@@ -36,7 +36,7 @@ bool Broker::publish(const std::string& topic, void* data, size_t len)
     }
 
     std::vector<std::string> parsed_topic = parseTopic(topic);
-    _buffer[queue_pos]                    = std::make_tuple(parsed_topic, data, len);
+    _buffer[queue_pos]                    = std::make_tuple(parsed_topic, data, len); // copy?
     sem_post(&work);
     return true;
 }
@@ -92,6 +92,12 @@ void Broker::printBuffer()
         }
         std::cout << " num: " << l << '\n';
     }
+}
+
+void Broker::printTree()
+{
+    _tree.printTopics([](std::string a) { std::cout << a << " "; });
+    std::cout << std::endl;
 }
 
 void Broker::entry(Broker* that)
