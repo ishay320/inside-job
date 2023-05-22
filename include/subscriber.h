@@ -23,6 +23,7 @@ public:
         {
             _queue->pop();
         }
+        delete _queue;
 
         // TODO: remove from the broker then delete queue
     }
@@ -36,6 +37,8 @@ public:
     }
 
     bool queueEmpty() const { return _queue->empty(); }
+
+    size_t queueSize() const { return _queue->size(); }
 
     std::pair<std::shared_ptr<void>, size_t> popData()
     {

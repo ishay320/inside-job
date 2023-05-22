@@ -36,17 +36,19 @@ bool test_stress()
         Data packet2{.num = -(int)i, .str = "test2"};
         pub.publish(topic, (void*)&packet2, 64);
 
-        while (sub.queueEmpty())
+        while (sub.queueSize() != 2)
         {
             std::this_thread::sleep_for(1ms);
         }
         while (!sub.queueEmpty())
         {
             auto data = sub.popData();
-            if (strcmp(((Data*)data.first.get())->str, "test1") == 0) // fail segfault
+            if (strcmp(((Data*)data.first.get())->str, "test1") == 0)
             {
                 if (((Data*)data.first.get())->num != (int)i)
                 {
+                    LOG_ERROR("positive num error, expected: " << i << " got: "
+                                                               << ((Data*)data.first.get())->num);
                     return false;
                 }
             }
@@ -54,6 +56,8 @@ bool test_stress()
             {
                 if (((Data*)data.first.get())->num != -(int)i)
                 {
+                    LOG_ERROR("negative num error, expected: " << -(int)i << " got: "
+                                                               << ((Data*)data.first.get())->num);
                     return false;
                 }
             }
