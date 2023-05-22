@@ -21,6 +21,11 @@ Broker::Broker()
 
 Broker::~Broker()
 {
+    if (_thread.joinable())
+    {
+        stop();
+    }
+
     for (size_t i = 0; i < BROKER_QUEUE_SIZE; i++)
     {
         sem_destroy(&_work[i]);
@@ -146,7 +151,6 @@ void Broker::run()
         {
             client.second(data, len);
         }
-        // FIXME: the vector call delete for all the clients
     }
 }
 

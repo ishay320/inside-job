@@ -101,8 +101,6 @@ bool test_emptyTopic()
     }
 
     broker.stop();
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(20ms);
     return true;
 }
 

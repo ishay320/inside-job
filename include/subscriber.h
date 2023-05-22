@@ -19,12 +19,11 @@ public:
     }
     ~Subscriber()
     {
-#if 0 // can be used after fix for broker
         while (!_queue->empty())
         {
             _queue->pop();
         }
-#endif
+
         // TODO: remove from the broker then delete queue
     }
 
@@ -32,7 +31,7 @@ public:
     {
 
         Callback callback =
-            std::bind(&Subscriber::pushData, *this, std::placeholders::_1, std::placeholders::_2);
+            std::bind(&Subscriber::pushData, this, std::placeholders::_1, std::placeholders::_2);
         _broker.subscribe(topic, _hand, callback);
     }
 
