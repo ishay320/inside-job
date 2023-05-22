@@ -18,55 +18,57 @@ The default queue of broker is `4096` but can be change in compilation using `$ 
 
 ## Usage
 
-The Inside Job package provides a simple API to use for message transfer between threads. The main component of the API is the Broker class.
+The Inside Job package provides a simple API to use for message transfer between threads. The main component of the API is the Broker class. the messaging api is using the `publish` and `subscribe` classes
 
 ## Broker
 
-The Broker class is used to manage connections and message transfer. To create a Broker object, simply call the constructor.
+The `Broker` class is responsible for managing connections and facilitating message transfer. To create a `Broker` object, simply instantiate it using the constructor and start its thread.
 
 ```cpp
 #include "broker.h"
 
-Broker broker();
+insideJob::Broker broker();
+broker.start();
 ```
 
-The broker will be pass to all threads by pointer or reference.
+Then pass the broker to all the threads by pointer or reference.
+
+In order to stop the broker call `broker.stop()` or let it destruct at the end of the scope.
 
 ## Subscribe
 
-To connect to the Broker for subscribing, call the `connect` function, which returns a Handle object to be used for subsequent operations.
+To subscribe to the `Broker`, create a `Subscriber` object by calling its constructor and passing the main `Broker` as an argument.
 
 ```cpp
-Handle hand = broker.connect();
+#include "subscriber.h"
+
+insideJob::Subscriber sub{broker};
 ```
 
-To subscribe to a topic, call the `subscribe` function with the topic name, the Handle object, and a callback function to be called when a message is received.
+To subscribe to a topic, use the `subscribe` method. You can subscribe to as many topics as you need.
 
 ```cpp
-bool my_callback(void* data, size_t len) {
-    std::cout << "Received message: " << std::string((char*)data, len) << std::endl;
-    return true;
-}
-
-broker.subscribe("my_topic", hand, my_callback);
-// or
-broker.subscribe("my_topic", hand,
-                [](void *data, size_t len) -> bool
-                {
-                    std::cout << "Received message: " << std::string((char*)data, len) << std::endl;
-                    return true;
-                });
+std::string topic{"/base/some1"};
+sub.subscribe(topic);
 ```
 
-The callback function will be called with a pointer to the received data and the size of the data. It should return true if the message was successfully processed, and false otherwise.
+You can check if messages have been received or determine the number of received messages using the `queueSize()` and `queueEmpty()` methods.
 
-> It is important to note that the callback function should be as lightweight as possible, as it will be called from the thread that handles message transfer.
+To retrieve the data, use the `popData()` method.
 
 ## Publish
 
-To publish a message to a topic, call the `publish` function with the topic name, a pointer to the data, and the size of the data.
+To publish messages to the `Broker`, create a `Publisher` object by calling its constructor and passing the main `Broker` as an argument.
 
 ```cpp
-char data[] = "Hello, world!";
-broker.publish("my_topic", data, sizeof(data));
+#include "publisher.h"
+
+insideJob::Publisher pub{broker};
+```
+
+To publish a message, use the `publish` method, providing the topic and the data.
+
+```cpp
+Data packet{.num = 12, .str = "test"};
+pub.publish(topic, (void*)&packet, 64);
 ```
