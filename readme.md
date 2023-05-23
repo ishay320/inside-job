@@ -2,9 +2,9 @@
 
 "Inside Job" is a package that manages the transfer of messages within a single process between threads using pointers and callbacks, enabling efficient and lightweight communication between the threads. It utilizes an MQTT-like approach, utilizing publish/subscribe patterns to transfer data through callbacks.
 
-## Installation - wip not installing yet
+## Installation
 
-To install the Inside Job package, simply clone the repository and build the project using your preferred build system.
+To install the Inside Job package, simply clone the repository and build the project.
 
 ```sh
 $ git clone https://github.com/ishay320/inside-job
@@ -14,11 +14,11 @@ $ cmake ..
 $ sudo make install
 ```
 
-The default queue of broker is `4096` but can be change in compilation using `$ cmake -DBROKER_QUEUE_SIZE=<queue-size> ..`
+The default queue of broker is `4096` messages but can be change in compilation using `$ cmake -DBROKER_QUEUE_SIZE=<queue-size> ..`
 
 ## Usage
 
-The Inside Job package provides a simple API to use for message transfer between threads. The main component of the API is the Broker class. the messaging api is using the `publish` and `subscribe` classes
+The Inside Job package provides a simple API to use for message transfer between threads. The main component of the API is the `Broker` class. The messaging api is using the `publish` and `subscribe` classes.
 
 ## Broker
 
@@ -31,7 +31,7 @@ insideJob::Broker broker();
 broker.start();
 ```
 
-Then pass the broker to all the threads by pointer or reference.
+Then pass the broker to all the threads by pointer, reference or make it global.
 
 In order to stop the broker call `broker.stop()` or let it destruct at the end of the scope.
 
@@ -66,7 +66,7 @@ To publish messages to the `Broker`, create a `Publisher` object by calling its 
 insideJob::Publisher pub{broker};
 ```
 
-To publish a message, use the `publish` method, providing the topic and the data.
+To publish a message, use the `publish()` method, providing the topic and the data.
 
 ```cpp
 Data packet{.num = 12, .str = "test"};
