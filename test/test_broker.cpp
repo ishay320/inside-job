@@ -1,6 +1,7 @@
 #include "broker.h"
 #include "tests.h"
 
+#include <atomic>
 #include <chrono>
 #include <thread>
 
@@ -13,7 +14,7 @@ bool test_runAndStop()
     broker.start();
     // check that its running
     insideJob::handle hand = broker.connect();
-    bool received          = false;
+    std::atomic<bool> received;
 
     broker.subscribe("/", hand,
                      [&received](const std::shared_ptr<void>&, size_t) -> bool
@@ -30,9 +31,9 @@ bool test_runAndStop()
         return false;
     }
 
+    received = false;
     broker.stop();
     // check that it stopped
-    received = false;
     broker.publish("/", NULL, 0);
     std::this_thread::sleep_for(20ms);
     if (received)
@@ -51,10 +52,10 @@ bool test_emptyTopic()
     insideJob::Broker broker;
     broker.start();
     // check that its running
-    insideJob::handle hand1 = broker.connect();
-    bool received1          = false;
-    insideJob::handle hand2 = broker.connect();
-    bool received2          = false;
+    insideJob::handle hand1     = broker.connect();
+    std::atomic<bool> received1 = false;
+    insideJob::handle hand2     = broker.connect();
+    std::atomic<bool> received2 = false;
 
     broker.subscribe("/", hand1,
                      [&received1](const std::shared_ptr<void>&, size_t) -> bool

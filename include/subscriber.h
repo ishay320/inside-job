@@ -1,10 +1,11 @@
 #pragma once
 
 #include "broker.h"
+#include "circular_queue.h"
 
 #include <functional>
-#include <iostream>
-#include <queue>
+
+#define SUBSCRIBER_QUEUE_SIZE 128
 
 namespace insideJob
 {
@@ -12,19 +13,9 @@ namespace insideJob
 class Subscriber
 {
 public:
-    Subscriber(Broker& broker) : _broker(broker)
-    {
-        _hand  = broker.connect();
-        _queue = new std::queue<std::pair<std::shared_ptr<void>, size_t>>;
-    }
+    Subscriber(Broker& broker) : _broker(broker) { _hand = broker.connect(); }
     ~Subscriber()
     {
-        while (!_queue->empty())
-        {
-            _queue->pop();
-        }
-        delete _queue;
-
         // TODO: remove from the broker then delete queue
     }
 
@@ -36,28 +27,22 @@ public:
         _broker.subscribe(topic, _hand, callback);
     }
 
-    bool queueEmpty() const { return _queue->empty(); }
+    bool queueEmpty() const { return _queue.empty(); }
 
-    size_t queueSize() const { return _queue->size(); }
+    size_t queueSize() const { return _queue.size(); }
 
-    std::pair<std::shared_ptr<void>, size_t> popData()
-    {
-        // TODO: lock queue?
-        auto ret = _queue->front();
-        _queue->pop();
-        return ret;
-    }
+    std::pair<std::shared_ptr<void>, size_t> popData() { return _queue.pop(); }
 
 private:
     bool pushData(std::shared_ptr<void> data, size_t len)
     {
-        _queue->push(std::pair{data, len});
-        return true;
+        return _queue.push(std::pair{data, len});
     }
 
     Broker& _broker;
     handle _hand;
-    std::queue<std::pair<std::shared_ptr<void>, size_t>>* _queue;
+    insideJob::CircularQueue<std::pair<std::shared_ptr<void>, size_t>, SUBSCRIBER_QUEUE_SIZE>
+        _queue;
 };
 
 } // namespace insideJob

@@ -13,10 +13,7 @@ namespace insideJob
 {
 Broker::Broker()
 {
-    for (size_t i = 0; i < BROKER_QUEUE_SIZE; i++)
-    {
-        sem_init(&_work[i], 0, 0);
-    }
+    sem_init(&_work, 0, 0);
 }
 
 Broker::~Broker()
@@ -26,10 +23,7 @@ Broker::~Broker()
         stop();
     }
 
-    for (size_t i = 0; i < BROKER_QUEUE_SIZE; i++)
-    {
-        sem_destroy(&_work[i]);
-    }
+    sem_destroy(&_work);
 }
 
 handle Broker::connect()
@@ -40,8 +34,7 @@ handle Broker::connect()
 
 bool Broker::publish(const std::string& topic, void* data, size_t len)
 {
-    int queue_pos = getQueueHead();
-    if (queue_pos == -1)
+    if (isQueueFull())
     {
         std::cout << "WARNING: broker buffer is full\n";
         return false;
@@ -53,8 +46,12 @@ bool Broker::publish(const std::string& topic, void* data, size_t len)
     memcpy(data_ptr, data, len);
     std::shared_ptr<void> data_share(data_ptr, free);
 
-    _buffer[queue_pos] = {parsed_topic, data_share, len};
-    sem_post(&_work[queue_pos]);
+    if (!_buffer.push({parsed_topic, data_share, len}))
+    {
+        std::cout << " WARNING: buffer is full\n";
+        return false;
+    }
+    sem_post(&_work);
     return true;
 }
 
@@ -63,6 +60,7 @@ void Broker::subscribe(const std::string& topic, const handle& hand, Callback ca
     std::vector<std::string> parsed_topic;
     parsed_topic = parseTopic(topic);
 
+    std::lock_guard lock{_tree_mutex};
     _tree.insert(parsed_topic.data(), parsed_topic.size(),
                  std::pair<handle, Callback>{hand, callback});
 }
@@ -81,6 +79,7 @@ bool Broker::remove_sub(const std::string& topic, const handle& hand)
     auto cmp_fun = [](std::pair<handle, Callback> a, std::pair<handle, Callback> b) -> bool
     { return a.first == b.first; };
 
+    std::lock_guard lock{_tree_mutex};
     return _tree.remove(parsed_topic.data(), parsed_topic.size(),
                         std::pair<handle, Callback>{hand, nullptr}, cmp_fun);
 }
@@ -88,34 +87,30 @@ bool Broker::remove_sub(const std::string& topic, const handle& hand)
 void Broker::start()
 {
     _thread = std::thread{entry, this};
-    // _thread.detach();
 }
 
 void Broker::stop()
 {
     _should_run = false;
-    sem_post(&_work[_queue_tail]);
+    sem_post(&_work);
     _thread.join();
 
     // TODO: wait for the loop to stop using semaphore and delete all
 }
 
-void Broker::printBuffer()
+void Broker::printBuffer() // FIXME: I`m broken
 {
-    for (size_t i = _queue_tail; i != _queue_head; i = (i + 1) % BROKER_QUEUE_SIZE)
+    const auto [topic, s, l] = _buffer.peak();
+    for (auto&& entry : topic)
     {
-        const auto [topic, s, l] = _buffer[i];
-        std::cout << "pos: " << i << " data: ";
-        for (auto&& entry : topic)
-        {
-            std::cout << entry << '/';
-        }
-        std::cout << " num: " << l << '\n';
+        std::cout << entry << '/';
     }
+    std::cout << " num: " << l << '\n';
 }
 
 void Broker::printTree()
 {
+    std::lock_guard lock{_tree_mutex};
     _tree.printTopics([](std::string a) { std::cout << a << " "; });
     std::cout << std::endl;
 }
@@ -132,19 +127,18 @@ void Broker::run()
         // sleep if buffer empty
         if (queueSize() == 0)
         {
-            sem_wait(&_work[_queue_tail]);
+            sem_wait(&_work);
             continue;
         }
 
         // pull from buffer
-        const auto [topic, data, len] = std::move(_buffer[_queue_tail]);
-
-        // release queue space
-        _queue_tail = (_queue_tail + 1) % BROKER_QUEUE_SIZE;
+        const auto [topic, data, len] = std::move(_buffer.pop());
 
         // get clients from tree
+        _tree_mutex.lock();
         std::vector<std::pair<handle, Callback>> clients =
             _tree.getPath(topic.data(), topic.size());
+        _tree_mutex.unlock();
 
         // push
         for (auto&& client : clients)
@@ -181,17 +175,6 @@ std::vector<std::string> Broker::parseTopic(const std::string& topic)
     return parsed_topic;
 }
 
-int Broker::getQueueHead()
-{
-    if (isQueueFull())
-    {
-        return -1;
-    }
-    size_t ret  = _queue_head;
-    _queue_head = (_queue_head + 1) % BROKER_QUEUE_SIZE;
-    return ret;
-}
-
 bool Broker::isQueueFull()
 {
     // with this approach im losing one space, another option is to use bool flag
@@ -200,16 +183,7 @@ bool Broker::isQueueFull()
 
 size_t Broker::queueSize()
 {
-    size_t queue_size = 0;
-    if (_queue_head < _queue_tail)
-    {
-        queue_size = _queue_head + BROKER_QUEUE_SIZE - _queue_tail;
-    }
-    else
-    {
-        queue_size = _queue_head - _queue_tail;
-    }
-    return queue_size;
+    return _buffer.size();
 }
 
 } // namespace insideJob
