@@ -25,6 +25,8 @@ include_directories(include)
 
 set(SOURCES
     src/broker.cpp
+    src/subscriber.cpp
+    src/publisher.cpp
 )
 
 # Inside job library

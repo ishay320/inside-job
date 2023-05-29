@@ -34,13 +34,12 @@ public:
     bool publish(const std::string& topic, void* data, size_t len);
 
     void subscribe(const std::string& topic, const handle& hand, Callback callback);
-    bool remove_sub(const std::string& topic, const handle& hand);
+    bool removeSub(const std::string& topic, const handle& hand);
 
     void start();
     void stop();
 
     void printBuffer();
-
     void printTree();
 
 private:

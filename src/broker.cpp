@@ -65,7 +65,7 @@ void Broker::subscribe(const std::string& topic, const handle& hand, Callback ca
                  std::pair<handle, Callback>{hand, callback});
 }
 
-bool Broker::remove_sub(const std::string& topic, const handle& hand)
+bool Broker::removeSub(const std::string& topic, const handle& hand)
 {
     if (topic.empty())
     {
