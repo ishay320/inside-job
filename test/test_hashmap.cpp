@@ -3,7 +3,7 @@
 #include "tests.h"
 
 /* Globals */
-using hashTree     = HashmapTree<std::string, std::pair<insideJob::handle, std::string>>;
+using hashTree     = insideJob::HashmapTree<std::string, std::pair<insideJob::handle, std::string>>;
 const auto cmp_fun = [](std::pair<insideJob::handle, std::string> a,
                         std::pair<insideJob::handle, std::string> b) -> bool
 { return a.first == b.first; };

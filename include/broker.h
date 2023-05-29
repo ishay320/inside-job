@@ -1,12 +1,16 @@
 #pragma once
 
+#include <array>
+#include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <semaphore.h>
 #include <string>
 #include <thread>
 #include <vector>
 
+#include "circular_queue.h"
 #include "hashmap_tree.h"
 
 #ifndef BROKER_QUEUE_SIZE
@@ -30,13 +34,12 @@ public:
     bool publish(const std::string& topic, void* data, size_t len);
 
     void subscribe(const std::string& topic, const handle& hand, Callback callback);
-    bool remove_sub(const std::string& topic, const handle& hand);
+    bool removeSub(const std::string& topic, const handle& hand);
 
     void start();
     void stop();
 
     void printBuffer();
-
     void printTree();
 
 private:
@@ -46,30 +49,26 @@ private:
 
     std::vector<std::string> parseTopic(const std::string& topic);
 
-    int getQueueHead();
-
     bool isQueueFull();
 
     size_t queueSize();
 
     std::thread _thread;
-    bool _should_run = true;
+    std::atomic<bool> _should_run = true;
 
-    // instead of just callback - hash of handle and callback for identification
+    // hash of handle and callback for identification
+    std::mutex _tree_mutex;
     HashmapTree<std::string, std::pair<handle, Callback>> _tree;
-
-    size_t _queue_tail = 0; /* where broker use */
-    size_t _queue_head = 0; /* where new objects pushed */
 
     typedef struct
     {
         std::vector<std::string> parsed_topic;
         std::shared_ptr<void> data_share;
         size_t len;
-    } Buffer;
+    } BufferItem;
 
-    Buffer _buffer[BROKER_QUEUE_SIZE];
-    sem_t _work[BROKER_QUEUE_SIZE];
+    sem_t _work;
+    CircularQueue<BufferItem, BROKER_QUEUE_SIZE> _buffer;
 };
 
 } // namespace insideJob
