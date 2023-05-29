@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace insideJob
+{
 template <class K, class V>
 class HashmapTree
 {
@@ -152,3 +154,4 @@ private:
     std::unordered_map<K, HashmapTree*> _tree;
     std::vector<V> _data;
 };
+} // namespace insideJob

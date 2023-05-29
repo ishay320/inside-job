@@ -68,7 +68,7 @@ private:
     } BufferItem;
 
     sem_t _work;
-    insideJob::CircularQueue<BufferItem, BROKER_QUEUE_SIZE> _buffer;
+    CircularQueue<BufferItem, BROKER_QUEUE_SIZE> _buffer;
 };
 
 } // namespace insideJob
