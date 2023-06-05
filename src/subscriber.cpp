@@ -29,6 +29,11 @@ size_t Subscriber::queueSize() const
     return _queue.size();
 }
 
+std::pair<std::shared_ptr<void>, size_t> Subscriber::peakData()
+{
+    return _queue.peak();
+}
+
 std::pair<std::shared_ptr<void>, size_t> Subscriber::popData()
 {
     return _queue.pop();

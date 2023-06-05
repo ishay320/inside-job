@@ -21,6 +21,7 @@ public:
     bool queueEmpty() const;
     size_t queueSize() const;
 
+    std::pair<std::shared_ptr<void>, size_t> peakData();
     std::pair<std::shared_ptr<void>, size_t> popData();
 
 protected:
