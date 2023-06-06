@@ -28,7 +28,7 @@ Broker::~Broker()
 
 handle Broker::connect()
 {
-    static handle id = 0;
+    static std::atomic_size_t id = 0;
     return id++;
 }
 
